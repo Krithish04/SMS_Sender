@@ -9,6 +9,7 @@ A lightweight Android-based SMS Gateway that turns your phone into an API-driven
 - **Auto-Start**: Automatically starts when the app opens or the phone boots up.
 - **SIM Discovery**: Supports multi-SIM devices with automatic default SIM detection.
 - **Status Logs**: Real-time logging of sent, delivered, and failed messages.
+- **Public URL Tracking**: Save your ngrok/tunnel URL directly in the app for easy reference.
 - **Security**: Protected by a customizable API Key.
 
 ## 🛠️ Setup & Installation

@@ -14,6 +14,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.telephony.SmsManager
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -106,6 +108,18 @@ class MainActivity : AppCompatActivity() {
         binding.btnTestSms.setOnClickListener {
             showTestSmsDialog()
         }
+
+        // Load and Save Public URL
+        val prefs = getSharedPreferences("gateway_prefs", Context.MODE_PRIVATE)
+        binding.etPublicUrl.setText(prefs.getString("public_url", ""))
+        
+        binding.etPublicUrl.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                prefs.edit().putString("public_url", s.toString()).apply()
+            }
+        })
 
         Intent(this, SmsService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
