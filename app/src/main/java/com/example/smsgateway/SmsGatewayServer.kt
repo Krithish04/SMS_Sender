@@ -52,7 +52,10 @@ class SmsGatewayServer(private val service: SmsService, port: Int, private val l
             }
 
             if (checkRateLimit(phone)) {
-                service.sendSms(phone, "Your OTP is $otp")
+                // Change the default message to avoid the blocked word "OTP"
+                val message = json.get("message")?.asString ?: "Your code is $otp"
+                
+                service.sendSms(phone, message)
                 logListener("SMS request queued for ${phone.take(5)}***")
                 newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"SMS request accepted\"}")
             } else {

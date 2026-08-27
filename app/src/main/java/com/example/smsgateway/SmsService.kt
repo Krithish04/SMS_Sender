@@ -102,12 +102,16 @@ class SmsService : Service() {
             val subscriptionManager = getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
             
             val subId = if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                // Try to get the default SMS subscription ID first
+                val defaultSubId = SubscriptionManager.getDefaultSmsSubscriptionId()
+                
                 val activeSubscriptions = subscriptionManager.activeSubscriptionInfoList
-                // Log all available SIM IDs for debugging
                 activeSubscriptions?.forEach { info ->
-                    logListener?.invoke("Found SIM: ${info.displayName} (ID: ${info.subscriptionId})")
+                    val isDefault = info.subscriptionId == defaultSubId
+                    logListener?.invoke("SIM: ${info.displayName} (ID: ${info.subscriptionId})${if (isDefault) " [DEFAULT]" else ""}")
                 }
-                activeSubscriptions?.firstOrNull()?.subscriptionId ?: -1
+                
+                if (defaultSubId != -1) defaultSubId else activeSubscriptions?.firstOrNull()?.subscriptionId ?: -1
             } else {
                 -1
             }

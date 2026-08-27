@@ -110,6 +110,11 @@ class MainActivity : AppCompatActivity() {
         Intent(this, SmsService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
+
+        // Auto-start gateway if permissions are already granted
+        if (checkPermissions()) {
+            startGateway()
+        }
     }
 
     private fun checkPermissions(): Boolean {
@@ -182,45 +187,41 @@ class MainActivity : AppCompatActivity() {
             setPadding(50, 20, 50, 10)
         }
 
+        // Generate a random 6-digit code
+        val randomCode = (100000..999999).random()
+
         val etPhone = EditText(this).apply { hint = "Phone (+91...)" }
-        val etOtp = EditText(this).apply { hint = "OTP (e.g. 123456)" }
+        val etMessage = EditText(this).apply { 
+            hint = "Message"
+            setText("Your code is $randomCode")
+        }
         
         layout.addView(etPhone)
-        layout.addView(etOtp)
+        layout.addView(etMessage)
 
         AlertDialog.Builder(this)
-            .setTitle("Test SMS")
+            .setTitle("Test SMS (Random Code)")
             .setView(layout)
             .setPositiveButton("Send") { _, _ ->
-                val phone = etPhone.text.toString()
-                val otp = etOtp.text.toString()
-                sendTestSms(phone, otp)
+                val phone = etPhone.text.toString().trim()
+                val message = etMessage.text.toString().trim()
+                sendTestSms(phone, message)
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
-    private fun sendTestSms(phone: String, otp: String) {
-        if (phone.isEmpty() || otp.isEmpty()) {
-            Toast.makeText(this, "Please enter phone and OTP", Toast.LENGTH_SHORT).show()
+    private fun sendTestSms(phone: String, message: String) {
+        if (phone.isEmpty() || message.isEmpty()) {
+            Toast.makeText(this, "Please enter phone and message", Toast.LENGTH_SHORT).show()
             return
         }
         
-        try {
-            val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                this.getSystemService(SmsManager::class.java)
-            } else {
-                SmsManager.getDefault()
-            }
-
-            val sentIntent = PendingIntent.getBroadcast(this, 0, Intent("SMS_SENT"), PendingIntent.FLAG_IMMUTABLE)
-            val deliveredIntent = PendingIntent.getBroadcast(this, 0, Intent("SMS_DELIVERED"), PendingIntent.FLAG_IMMUTABLE)
-
-            smsManager.sendTextMessage(phone, null, "Your OTP is $otp", sentIntent, deliveredIntent)
-            addLog("Sending Test SMS to ${phone.take(5)}***")
-        } catch (e: Exception) {
-            addLog("Test SMS error: ${e.message}")
-            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+        if (isBound) {
+            smsService?.sendSms(phone, message)
+            addLog("Requested to send '$message' to $phone")
+        } else {
+            addLog("Error: Service not bound")
         }
     }
 
